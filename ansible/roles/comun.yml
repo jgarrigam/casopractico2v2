@@ -1,0 +1,64 @@
+- name: Configurar el hostname
+  hostname:
+    name: "{{inventory_hostname}}.{{kubernets_domain}}"
+    use: systemd
+  when: inventory_hostname is regex("work*|master*")
+  become: yes
+
+- name: Agregar los DNS de los demás hosts
+  blockinfile:
+    path: /etc/hosts
+    block: |
+      {{ item.ip }} {{ item.name }}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+  loop:
+    - { name: master, ip: 10.0.1.101 }
+    - { name: worker, ip: 10.0.1.102 }
+    - { name: nfs, ip: 10.0.1.103 }
+
+- name: Actualizar los paquetes 
+  dnf:
+    name: "*"
+    state: latest
+  become: yes
+
+- name: Configurar el timezone
+  timezone:
+    name: Europe/Madrid (CEST, +0200)
+  become: yes
+
+  - name: Instalar Chrony
+  dnf:
+    name: chrony
+    state: present
+  become: yes
+  
+- name: Habilitar Chronyd
+  systemd:
+    name: chronyd
+    state: started
+    enabled: yes
+    masked: no
+  become: yes
+
+  - name: Instalar firewall
+  dnf:
+    name: firewalld
+    state: present
+  become: yes
+  
+- name: Habilitar firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+    masked: no
+  become: yes
+
+- name: Deshabilitar la seguridad SELinux
+  selinux:
+    state: disabled
+  become: yes
+
+- name: Habilitar transparent masquerading
+  
