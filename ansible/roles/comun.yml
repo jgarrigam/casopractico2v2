@@ -60,5 +60,21 @@
     state: disabled
   become: yes
 
+- name: Add the br_netfilter module
+  community.general.modprobe:
+    name: br_netfilter
+    state: present
+
+
 - name: Habilitar transparent masquerading
-  
+  firewalld:
+      #zone: SmazMe
+      masquerade: yes
+      permanent: true
+      state: enabled
+
+- name: Reiniciamos el servicio Firewalld 
+  systemd:
+    name: firewalld
+    state: restarted
+  become: yes
