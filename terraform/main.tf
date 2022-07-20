@@ -77,7 +77,7 @@ resource "azurerm_network_interface" "masterNic" {
     name                          = "masterNicConfiguration"
     subnet_id                     = azurerm_subnet.myterraformsubnet.id
     private_ip_address_allocation = "static"
-    private_ip_address            = "10.0.1.100"
+    private_ip_address            = "10.0.1.101"
     public_ip_address_id          = azurerm_public_ip.masterpublicip.id
   }
 }
@@ -92,7 +92,7 @@ resource "azurerm_network_interface" "workerNic" {
     name                          = "workerNicConfiguration"
     subnet_id                     = azurerm_subnet.myterraformsubnet.id
     private_ip_address_allocation = "static"
-    private_ip_address            = "10.0.1.101"
+    private_ip_address            = "10.0.1.102"
     public_ip_address_id          = azurerm_public_ip.workerpublicip.id
   }
 }
@@ -107,7 +107,7 @@ resource "azurerm_network_interface" "NFSNic" {
     name                          = "NFSNicConfiguration"
     subnet_id                     = azurerm_subnet.myterraformsubnet.id
     private_ip_address_allocation = "static"
-    private_ip_address            = "10.0.1.102"
+    private_ip_address            = "10.0.1.103"
     public_ip_address_id          = azurerm_public_ip.NFSpublicip.id
   }
 }
@@ -181,7 +181,7 @@ resource "tls_private_key" "example_ssh" {
 
 # Create master virtual machine
 resource "azurerm_linux_virtual_machine" "masterKubernetes" {
-  name                  = "masterKubernetes"
+  name                  = "master.example.com"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.masterNic.id]
@@ -206,7 +206,7 @@ resource "azurerm_linux_virtual_machine" "masterKubernetes" {
     version   = "22.03.28"
   }
 
-  computer_name                   = "masterKubernetesvm"
+  computer_name                   = "master.example.com"
   admin_username                  = "azureuser"
   disable_password_authentication = true
 
@@ -222,7 +222,7 @@ resource "azurerm_linux_virtual_machine" "masterKubernetes" {
 
 # Create worker virtual machine
 resource "azurerm_linux_virtual_machine" "workerKubernetes" {
-  name                  = "workerKubernetes"
+  name                  = "worker.example.com"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.workerNic.id]
@@ -247,7 +247,7 @@ resource "azurerm_linux_virtual_machine" "workerKubernetes" {
     version   = "22.03.28"
   }
 
-  computer_name                   = "workerKubernetesvm"
+  computer_name                   = "worker.example.com"
   admin_username                  = "azureuser"
   disable_password_authentication = true
 
@@ -263,7 +263,7 @@ resource "azurerm_linux_virtual_machine" "workerKubernetes" {
 
 # Create NFS virtual machine
 resource "azurerm_linux_virtual_machine" "NFSKubernetes" {
-  name                  = "NFSKubernetes"
+  name                  = "NFS.example.com"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.NFSNic.id]
@@ -288,7 +288,7 @@ resource "azurerm_linux_virtual_machine" "NFSKubernetes" {
     version   = "22.03.28"
   }
 
-  computer_name                   = "NFSvm"
+  computer_name                   = "NFS.example.com"
   admin_username                  = "azureuser"
   disable_password_authentication = true
 

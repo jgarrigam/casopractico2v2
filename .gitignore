@@ -1,2 +1,7 @@
 
 .DS_Store
+terraform/terraform.tfstate
+*.0_x5
+*.2_x5
+*.info
+*.hcl

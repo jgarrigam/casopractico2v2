@@ -1,0 +1,11 @@
+[all:vars]
+ansible_user=azureuser
+
+[master]
+master
+
+[worker]
+worker
+
+[nfs]
+nfs
