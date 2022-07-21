@@ -78,3 +78,79 @@
     name: firewalld
     state: restarted
   become: yes
+
+- name: Desactivamos Swap
+  shell: swapoff -a
+  become: yes
+
+- name: Comprovación paquetes necesarios CRI-O
+    yum:
+      name: "{{ item }}"
+      state: latest
+      with_items:
+        - btrfs-progs-devel
+        - container-selinux
+        - device-mapper-devel
+        - gcc
+        - git
+        - glib2-devel
+        - glibc-devel
+        - glibc-static
+        - go-md2man
+        - golang
+        - gpgme-devel
+        - json-glib-devel
+        - libassuan-devel
+        - libgpg-error-devel
+        - libseccomp-devel
+        - make
+        - pkgconfig
+        - skopeo-containers
+        - tar
+        - wget
+
+- name: Make directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+           - /usr/local/go
+           - /etc/systemd/system/kubelet.service.d/
+           - /var/lib/etcd
+           - /etc/cni/net.d
+           - /etc/containers
+
+- name: clone runc
+  git:
+    repo: https://github.com/opencontainers/runc
+    dest: /root/src/github.com/opencontainers/runc
+
+- name: clone CRI-O
+  git:
+    repo: https://github.com/kubernetes-incubator/cri-o
+    dest: /root/src/github.com/kubernetes-incubator/cri-o
+    version: kube-1.6.x
+
+- name: clone CNI
+  git:
+    repo: https://github.com/containernetworking/plugins
+    dest: /root/src/github.com/containernetworking/plugins
+
+- name: build runc
+    shell: |
+      cd /root/src/github.com/opencontainers/runc && \
+      export GOPATH=/root && \
+      make BUILDTAGS="seccomp selinux" && \
+      make install
+
+- name: link runc
+    file: src=/usr/local/sbin/runc dest=/usr/bin/runc state=link force=yes
+
+- name: build cri-o
+    shell: |
+        cd /root/src/github.com/kubernetes-incubator/cri-o && \
+        make install.tools && \
+        make && \
+        make install && \
+        make install.systemd && \
+        make install.config
