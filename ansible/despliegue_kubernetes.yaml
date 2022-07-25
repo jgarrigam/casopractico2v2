@@ -9,3 +9,5 @@
 - import_playbook: master.yaml
 # Ejecutamos las configuraciones correspondientes al nodo worker
 - import_playbook: workers.yaml
+# Ejecutamos las configuraciones correspondientes al nodo worker
+- import_playbook: jenkins.yaml
