@@ -1,11 +1,17 @@
 [all:vars]
-ansible_user=azureuser
+ansible_user=ansibleuser
 
 [master]
-master
+master:
+    ansible_host: 10.0.1.101
 
-[worker]
-worker
+[workers]
+worker:
+    ansible_host: 10.0.1.102
 
 [nfs]
-nfs
+nfs: 
+    ansible_host: 10.0.1.103
+
+
+#creación de hosts ref https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html

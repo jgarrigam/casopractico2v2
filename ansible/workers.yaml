@@ -1,0 +1,7 @@
+  - name: Realizando configuraciones comunes a todos los nodos
+    hosts: all
+    vars_files:
+      - "vars/workers.yaml"
+    gather_facts: true
+    roles:
+      - workers

@@ -1,0 +1,14 @@
+all:
+  children:
+    master:
+      hosts:
+        master.example.com:
+        51.142.121.26:
+    workers:
+      hosts:
+        worker.example.com:
+        51.142.120.94:
+    nfs:
+      hosts:
+        nfs.example.com:
+        51.142.121.16:

@@ -1,0 +1,8 @@
+# Red de Docker (facts)
+docker_network: "{{ ansible_docker0.ipv4.network }}/16"
+
+# Red por defecto para los pods.
+pod_network: "10.0.2.0/16"
+
+# SDN 
+sdn: flannel

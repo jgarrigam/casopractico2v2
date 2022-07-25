@@ -1,0 +1,62 @@
+---
+
+- name: 'Prerrequisitos - Configuramos el hostname'
+  ansible.builtin.hostname:
+    name: "{{inventory_hostname}}.{{kubernets_domain}}"
+    use: systemd
+    when: inventory_hostname is regex("work*|master*")
+  become: true
+
+- name: 'Prerrequisitos - Registramos los DNS de los demás hosts'
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '.*{{ item }}$'
+    line: "{{ hostvars[item].ansible_host }} {{item}} {{item}}.{{kubernets_domain}}"
+    state: present
+    when: hostvars[item].ansible_host is defined
+    with_items: "{{ groups.all }}"
+    become: true
+
+- name: 'Prerrequisitos - Instaladas las últimas actualizaciones disponibles en todos los repositorios correspondientes'
+  dnf:
+    name: "*"
+    state: latest
+    become: true
+
+- name: 'Prerrequisitos - El servicio chronyd iniciado con la correspondiente zona horaria'
+  timezone:
+    name: Europe/Madrid
+  become: true
+
+- name: 'Prerrquisitos - Instalamos Chrony'
+  dnf:
+      name: chrony
+      state: present
+  become: true
+
+- name: 'Prerrequisitos - Habilitamos servicio Chronyd'
+  systemd:
+      name: chronyd
+      state: started
+      enabled: yes
+      masked: no
+  become: true
+
+- name: 'Prerrequisitos - El cortafuegos está habilitado'
+  dnf:
+      name: firewalld
+      state: latest
+  become: true
+
+- name: 'Prerrequisitos - Habilitar y reiniciar el servicio firewalld'
+  systemd:
+      name: firewalld
+      state: restarted
+      enabled: yes
+      masked: no
+  become: true
+
+- name: 'Prerrequisitos - Deshabilitamos SELinux'
+  selinux:
+      state: disabled
+  become: true

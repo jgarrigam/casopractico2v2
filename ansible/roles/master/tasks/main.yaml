@@ -1,0 +1,111 @@
+---
+
+- name: 9. Permitir en el cortafuegos el tráfico necesario para el servicio 6443
+  firewalld:
+    port: 6443/tcp
+    permanent: true
+    state: enabled
+  become: true
+
+- name: 9. Permitir en el cortafuegos el tráfico necesario para el servicio 2379-2380 tcp
+  firewalld:
+    port: 2379-2380/tcp
+    permanent: true
+    state: enabled
+  become: true
+
+- name: 9. Permitir en el cortafuegos el tráfico necesario para el servicio 10250-10252 tcp
+  firewalld:
+    port: 10250-10252/tcp
+    permanent: true
+    state: enabled
+  become: true
+
+- name: 9. Permitir en el cortafuegos el tráfico necesario para el servicio 10255 tcp
+  firewalld:
+    port: 10255/tcp
+    permanent: true
+    state: enabled
+  become: true
+
+- name:  9. Permitir en el cortafuegos el tráfico necesario para el servicio - Reiniciando el servicio Firewalld 
+  systemd:
+    name: firewalld
+    state: restarted
+  become: true
+
+- name: 10. Permitir en el cortafuegos las conexiones desde cada nodo worker
+  firewalld:
+    rich_rule: "rule family=ipv4 source address={{ docker_network }} accept"
+    permanent: true
+    zone: public
+    state: enabled
+  become: true
+
+- name: 10. Permitir en el cortafuegos las conexiones desde cada nodo worker - Reiniciando el servicio Firewalld 
+  systemd:
+    name: firewalld
+    state: restarted
+  become: true
+
+- name: 11. Configurar kubeadm
+  shell: kubeadm config images pull
+  become: true
+
+- name: 12. Instalar el plugin CNI
+  shell: "kubeadm init --apiserver-advertise-address {{ ansible_host }} --pod-network-cidr {{ pod_network }}"
+  register: kubeadd_cmd
+  become: true
+
+- name: 12. Instalar el plugin CNI - Mostrando la salida de la ejecución del kubeadm init
+  debug:
+    msg: "{{ kubeadd_cmd.stdout_lines }}"
+
+- name: 13. Exportar la configuración de kubeadmin
+  shell: export KUBECONFIG=/etc/kubernetes/admin.conf
+  register: token_out
+  become: true
+
+#- name: 14. Autorizar el acceso al cluster
+#  tasks:
+- name: 14. mkdir -p $HOME/.kube
+  file:
+    path: /home/kubeadmin/.kube
+    state: directory
+  become: true
+
+- name: 14. sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: $HOME/.kube/config
+    owner: $(id -u)
+    group: f$(id -g)oo
+    mode: '7777'
+
+- name: 14. kubectl get nodes
+  set_fact:
+    node_data: "{{ node_data | combine ({item.split(' ').0 : { 'name': item.split(' ').0 , 'ip' : item.split(' ').1 }}, recursive=True) }}"
+  with_items: "{{ nodes.stdout_lines }}"
+
+- name: 16.1 Permitir el tráfico en el cortafuegos del master y workers
+  firewalld:
+    port: 2379-2380/tcp
+    permanent: true
+    state: enabled
+  become: true
+
+- name: Reiniciando el servicio Firewalld 
+  systemd:
+    name: firewalld
+    state: restarted
+  become: true
+
+- name: 16.2 Aplicamos la definción de las políticas de red en el nodo master
+  shell: kubectl apply -f https://docs.projectcalico.org/manifests/canal.yaml
+
+- name: Reiniciando el server
+  reboot:
+  become: true
+
+- name: 17. Instalación del Ingress Controller (HAProxy)
+  shell: kubectl apply -f https://raw.githubusercontent.com/haproxytech/kubernetes-ingress/master/deploy/haproxy-ingress.yaml

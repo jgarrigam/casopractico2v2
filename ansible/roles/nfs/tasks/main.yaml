@@ -1,0 +1,60 @@
+---
+
+- name: 1.Instalar los rpms necesarios
+  dnf:
+    name: "{{ nfs_packages }}"
+    state: present
+  become: true
+
+- name: 2.Crear los directorios que serán compartidos por el servidor, 3. Establecer la configuración del propietario del directorio, 4. Modificar los permisos al directorio
+  file:
+    path: /mnt/nfs
+    state: directory
+    owner: nobody
+    mode: '777'
+
+#- name: '5. Añadir al fichero /etc/exports todos los directorios que se desean compartir'
+#  tasks:
+- name: 'Agregamos el master al /etc/exports'
+  lineinfile:
+    dest: /etc/exports
+    line: "/mnt/nfs/ {{ hostvars[item].ansible_host }}(rw,sync)"
+    state: present
+  when: hostvars[item].ansible_host is defined
+  with_items: "{{ groups.master }}"
+  become: true
+  
+- name: 'Agregamos el worker al /etc/exports'
+  lineinfile:
+    dest: /etc/exports
+    line: "/mnt/nfs/ {{ hostvars[item].ansible_host }}(rw,sync)"
+    state: present
+  when: hostvars[item].ansible_host is defined
+  with_items: "{{ groups.workers }}"
+  become: true
+
+- name: 6. Habilitar e iniciar el servicio NFS
+  systemd:
+    name: nfs-server
+    state: started
+    enabled: yes
+    masked: no
+  become: true
+
+- name: 7. Exportar el sistema de ficheros
+  shell: exportfs -arv
+  become: true
+
+- name: 8. Verificar que el directorio está siendo exportado correctamente
+  shell: exportfs -s
+  become: true
+
+- name: 9. Habilitar en el cortafuegos el tráfico correspondiente al servicio NFS
+  shell: for service in nfs rpc-bind mountd;do firewall-cmd --add-service=${service} --permanent;firewall-cmd --reload;done
+  become: true
+
+- name: Reiniciando el servicio Firewalld 
+  systemd:
+    name: firewalld
+    state: restarted
+  become: true

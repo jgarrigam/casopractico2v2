@@ -1,0 +1,2 @@
+kubernets_domain: 'example.com'
+common_packages: ['net-tools', 'wget']

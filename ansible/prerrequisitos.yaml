@@ -1,0 +1,5 @@
+  - name: Realizando configuraciones comunes a todos los nodos
+    hosts: all
+    gather_facts: true
+    roles:
+      - prerrequisitos

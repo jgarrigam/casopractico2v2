@@ -1,0 +1,11 @@
+
+# Ejecutamos los prerrequisitos
+- import_playbook: prerrequisitos.yaml
+# Ejecutamos las configuraciones correspondientes al nodoNFS
+- import_playbook: nfs.yaml
+# Ejecutamos las configuraciones comunes
+- import_playbook: comunes.yaml
+# Ejecutamos las configuraciones correspondientes al nodo master
+- import_playbook: master.yaml
+# Ejecutamos las configuraciones correspondientes al nodo worker
+- import_playbook: workers.yaml
